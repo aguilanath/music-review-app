@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Home — Music Reviews{% endblock %}
+{% block content %}
+<div style="text-align:center; padding: 4rem 0;">
+    <h1 style="font-size: 3rem; margin-bottom: 1rem;">Music Reviews</h1>
+    <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2.5rem;">
+        Browse, add, and manage album reviews. Generate reports filtered by artist, genre, and rating.
+    </p>
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+        <a href="/reviews" class="btn btn-primary">View All Reviews</a>
+        <a href="/reviews/new" class="btn btn-secondary">Add a Review</a>
+        <a href="/report" class="btn btn-secondary">Generate Report</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit" if review else "Add" }} Review{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>{{ "Edit Review" if review else "Add a Review" }}</h1>
+    <a href="/reviews" class="btn btn-secondary">← Back to Reviews</a>
+</div>
+
+<div class="card" style="max-width: 600px;">
+    <form method="POST">
+
+        <div class="form-group">
+            <label for="user_id">Reviewer</label>
+            <!-- Populated from Users table -->
+            <select name="user_id" id="user_id" required>
+                <option value="">— Select a user —</option>
+                {% for u in users %}
+                <option value="{{ u.user_id }}"
+                    {{ "selected" if review and review.user_id == u.user_id }}>
+                    {{ u.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="album_id">Album</label>
+            <!-- Populated from Albums JOIN Artists -->
+            <select name="album_id" id="album_id" required>
+                <option value="">— Select an album —</option>
+                {% for al in albums %}
+                <option value="{{ al.album_id }}"
+                    {{ "selected" if review and review.album_id == al.album_id }}>
+                    {{ al.artist_name }} — {{ al.title }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="rating">Rating (1–10)</label>
+            <input type="number" name="rating" id="rating" min="1" max="10" required
+                   value="{{ review.rating if review else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="comment">Comment</label>
+            <textarea name="comment" id="comment" placeholder="Write your review...">{{ review.comment if review else '' }}</textarea>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+            <button type="submit" class="btn btn-primary">
+                {{ "Save Changes" if review else "Submit Review" }}
+            </button>
+            <a href="/reviews" class="btn btn-secondary">Cancel</a>
+        </div>
+
+    </form>
+</div>
+
+{% endblock %}

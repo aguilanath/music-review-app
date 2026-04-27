@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Report{% endblock %}
+{% block content %}
+
+<h1>Review Report</h1>
+
+<!-- Filter Form — dropdowns populated dynamically from DB -->
+<div class="card">
+    <h2>Filter Reviews</h2>
+    <form method="POST">
+        <div class="filter-grid">
+
+            <div class="form-group">
+                <label for="artist_id">Artist</label>
+                <!-- Dynamically populated from Artists table -->
+                <select name="artist_id" id="artist_id">
+                    <option value="">All Artists</option>
+                    {% for a in artists %}
+                    <option value="{{ a.artist_id }}"
+                        {{ "selected" if filters.get('artist_id') == a.artist_id|string }}>
+                        {{ a.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="genre">Genre</label>
+                <!-- Dynamically populated from Albums table -->
+                <select name="genre" id="genre">
+                    <option value="">All Genres</option>
+                    {% for g in genres %}
+                    <option value="{{ g.genre }}"
+                        {{ "selected" if filters.get('genre') == g.genre }}>
+                        {{ g.genre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="rating_min">Min Rating</label>
+                <input type="number" name="rating_min" id="rating_min" min="1" max="10"
+                       placeholder="1" value="{{ filters.get('rating_min', '') }}">
+            </div>
+
+            <div class="form-group">
+                <label for="rating_max">Max Rating</label>
+                <input type="number" name="rating_max" id="rating_max" min="1" max="10"
+                       placeholder="10" value="{{ filters.get('rating_max', '') }}">
+            </div>
+
+            <div class="form-group">
+                <label for="date_from">Date From</label>
+                <input type="date" name="date_from" id="date_from"
+                       value="{{ filters.get('date_from', '') }}">
+            </div>
+
+            <div class="form-group">
+                <label for="date_to">Date To</label>
+                <input type="date" name="date_to" id="date_to"
+                       value="{{ filters.get('date_to', '') }}">
+            </div>
+
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">Generate Report</button>
+    </form>
+</div>
+
+<!-- Results -->
+{% if request.method == 'POST' %}
+
+    {% if stats %}
+    <h2>Statistics</h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ results|length }}</div>
+            <div class="stat-label">Total Reviews</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.avg_rating }}</div>
+            <div class="stat-label">Avg Rating</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.highest_rating }}</div>
+            <div class="stat-label">Highest Rating</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.lowest_rating }}</div>
+            <div class="stat-label">Lowest Rating</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if results %}
+    <h2>Matching Reviews ({{ results|length }})</h2>
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Album</th>
+                    <th>Artist</th>
+                    <th>Genre</th>
+                    <th>Reviewer</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in results %}
+                <tr>
+                    <td>{{ r.album_title }}</td>
+                    <td style="color: var(--text-muted);">{{ r.artist_name }}</td>
+                    <td style="color: var(--text-muted);">{{ r.album_genre }}</td>
+                    <td>{{ r.user_name }}</td>
+                    <td><span class="rating">{{ r.rating }}/10</span></td>
+                    <td style="color: var(--text-muted); max-width: 220px;">
+                        {{ r.comment[:80] if r.comment }}{% if r.comment and r.comment|length > 80 %}…{% endif %}
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.82rem;">
+                        {{ r.created_at.strftime('%b %d, %Y') }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card" style="text-align:center; padding: 2rem;">
+        <p style="color: var(--text-muted);">No reviews match your filters.</p>
+    </div>
+    {% endif %}
+
+{% endif %}
+
+{% endblock %}
