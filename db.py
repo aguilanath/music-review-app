@@ -8,4 +8,7 @@ DB_CONFIG = {
 }
 
 def get_connection():
-    return mysql.connector.connect(**DB_CONFIG)
+    connection = mysql.connector.connect(**DB_CONFIG)
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED")
+    return connection
