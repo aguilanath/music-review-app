@@ -36,11 +36,15 @@
                 </td>
                 <td>
                     <div class="actions">
+                        {% if session["user_id"] and session["user_id"] == r.user_id|string %}
                         <a href="/reviews/{{ r.review_id }}/edit" class="btn btn-secondary">Edit</a>
                         <form action="/reviews/{{ r.review_id }}/delete" method="POST"
                               onsubmit="return confirm('Delete this review?')">
                             <button type="submit" class="btn btn-danger">Delete</button>
                         </form>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.82rem;">—</span>
+                        {% endif %}
                     </div>
                 </td>
             </tr>

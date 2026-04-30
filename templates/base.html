@@ -229,7 +229,17 @@
         <a href="/" class="brand">♪ MusicReviews</a>
         <a href="/reviews">Reviews</a>
         <a href="/report">Report</a>
+        <form action="/set_user" method="POST" style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
+            <select name="user_id" style="width: auto; padding: 0.3rem 0.6rem; font-size: 0.85rem;">
+                <option value="">— Guest —</option>
+                {% for u in all_users %}
+                    <option value="{{ u.user_id }}" {% if session.get('user_id')|string == u.user_id|string %}selected{% endif %}>{{ u.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-secondary" style="padding: 0.3rem 0.8rem;">Switch</button>
+        </form>
     </nav>
+
 
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}

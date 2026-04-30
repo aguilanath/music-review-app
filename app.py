@@ -1,8 +1,31 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from db import get_connection
 
 app = Flask(__name__)
 app.secret_key = "cs348_secret_key"
+
+# ─────────────────────────────────────────────
+# all_users context processor to make it available in all templates for dropdowns and user info
+# ─────────────────────────────────────────────
+
+@app.context_processor
+def inject_users():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT user_id, name FROM Users ORDER BY name")
+    users = cursor.fetchall()
+    conn.close()
+    return dict(all_users=users, session=session)
+
+# ─────────────────────────────────────────────
+# User Login (rough template, no actual login just selection)
+# ─────────────────────────────────────────────
+
+@app.route("/set_user", methods=["POST"])
+def set_user():
+    session["user_id"] = request.form.get("user_id")
+    session["user_name"] = request.form.get("user_name")
+    return redirect(request.referrer or url_for("index"))
 
 # ─────────────────────────────────────────────
 # HOME
@@ -22,7 +45,7 @@ def reviews():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""
-        SELECT r.review_id, r.rating, r.comment, r.created_at,
+        SELECT r.review_id, r.rating, r.comment, r.created_at, r.user_id,
                u.name AS user_name,
                al.title AS album_title,
                ar.name AS artist_name
@@ -43,7 +66,7 @@ def new_review():
     cursor = conn.cursor(dictionary=True)
 
     if request.method == "POST":
-        user_id = request.form["user_id"]
+        user_id = session["user_id"]
         album_id = request.form["album_id"]
         rating = request.form["rating"]
         comment = request.form["comment"]
