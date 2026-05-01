@@ -5,6 +5,7 @@ Small web app using a MySQL Database that holds reviews for speicifc albums wher
 generate a report based on parameters.
 
 ## AI Usage
-- Used only Claude for portions of this project
-- Mainly generated the html files, (index, form)
-- helped with basic server setup
+** Tool Used: ** Claude (Anthropic)
+- Generating and Styling HTML templates
+- Basic Server Setup (template for routes)
+- Seed generation for schema
