@@ -65,34 +65,42 @@ def new_review():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
+    # POST - Handle review submission
     if request.method == "POST":
         user_id = session["user_id"]
         album_id = request.form["album_id"]
         rating = request.form["rating"]
         comment = request.form["comment"]
 
-        cursor.execute(
-            "INSERT INTO Reviews (user_id, album_id, rating, comment) VALUES (%s, %s, %s, %s)",
-            (user_id, album_id, rating, comment)
-        )
-        conn.commit()
-        conn.close()
-        flash("Review added successfully!", "success")
-        return redirect(url_for("reviews"))
-
-    # Populate dropdowns from DB
-    cursor.execute("SELECT user_id, name FROM Users ORDER BY name")
-    users = cursor.fetchall()
-
+        conn.start_transaction()
+        try: 
+            cursor.execute(
+                "INSERT INTO Reviews (user_id, album_id, rating, comment) VALUES (%s, %s, %s, %s)",
+                (user_id, album_id, rating, comment)
+            )
+            conn.commit()
+            conn.close()
+            flash("Review added successfully!", "success")
+            return redirect(url_for("reviews"))
+        except Exception as e:
+            conn.rollback()
+            conn.close()
+            flash("Error adding review.", "danger")
+            return redirect(url_for("new_review"))
+        
+    # GET - Populate dropdowns
     cursor.execute("""
         SELECT al.album_id, al.title, ar.name AS artist_name
         FROM Albums al
         JOIN Artists ar ON al.artist_id = ar.artist_id
+        WHERE al.album_id NOT IN (
+            SELECT album_id FROM Reviews WHERE user_id = %s          
+        )
         ORDER BY ar.name, al.title
-    """)
+    """, (session["user_id"],))
     albums = cursor.fetchall()
     conn.close()
-    return render_template("reviews/form.html", users=users, albums=albums, review=None)
+    return render_template("reviews/form.html", albums=albums, review=None)
 
 
 @app.route("/reviews/<int:review_id>/edit", methods=["GET", "POST"])
@@ -101,26 +109,30 @@ def edit_review(review_id):
     cursor = conn.cursor(dictionary=True)
 
     if request.method == "POST":
-        user_id = request.form["user_id"]
+        user_id = session["user_id"]
         album_id = request.form["album_id"]
         rating = request.form["rating"]
         comment = request.form["comment"]
 
-        cursor.execute("""
-            UPDATE Reviews
-            SET user_id=%s, album_id=%s, rating=%s, comment=%s
-            WHERE review_id=%s
-        """, (user_id, album_id, rating, comment, review_id))
-        conn.commit()
-        conn.close()
-        flash("Review updated successfully!", "success")
-        return redirect(url_for("reviews"))
+        conn.start_transaction()
+        try: 
+            cursor.execute("""
+                UPDATE Reviews
+                SET user_id=%s, album_id=%s, rating=%s, comment=%s
+                WHERE review_id=%s
+            """, (user_id, album_id, rating, comment, review_id))
+            conn.commit()
+            conn.close()
+            flash("Review updated successfully!", "success")
+            return redirect(url_for("reviews"))
+        except Exception as e:
+                conn.rollback()
+                conn.close()
+                flash("Error editing review.", "danger")
+                return redirect(url_for("edit_review", review_id=review_id))
 
     cursor.execute("SELECT * FROM Reviews WHERE review_id=%s", (review_id,))
     review = cursor.fetchone()
-
-    cursor.execute("SELECT user_id, name FROM Users ORDER BY name")
-    users = cursor.fetchall()
 
     cursor.execute("""
         SELECT al.album_id, al.title, ar.name AS artist_name
@@ -130,7 +142,7 @@ def edit_review(review_id):
     """)
     albums = cursor.fetchall()
     conn.close()
-    return render_template("reviews/form.html", users=users, albums=albums, review=review)
+    return render_template("reviews/form.html", albums=albums, review=review)
 
 
 @app.route("/reviews/<int:review_id>/delete", methods=["POST"])
